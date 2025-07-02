@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デイリークイズ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .quiz-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .question-area {
+            margin-bottom: 30px;
+        }
+
+        .question-number {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-button {
+            background-color: #e0e6ed;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            color: #444;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .option-button:hover {
+            background-color: #c9d2de;
+            transform: translateY(-2px);
+        }
+
+        .option-button:active {
+            background-color: #b0bccd;
+            transform: translateY(0);
+        }
+
+        .results-container {
+            font-size: 1.4em;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .results-container p {
+            margin-bottom: 15px;
+        }
+
+        .retake-button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .retake-button:hover {
+            background-color: #2980b9;
+        }
+
+        #challenge-count {
+            color: #777;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>デイリークイズ</h1>
+        <div id="quiz-area">
+            <div class="question-area">
+                <div class="question-number" id="question-number"></div>
+                <div class="question-text" id="question-text"></div>
+            </div>
+            <div class="options-container" id="options-container">
+                </div>
+        </div>
+        <div id="results-area" class="results-container" style="display: none;">
+            <p id="score-text"></p>
+            <button id="retake-quiz" class="retake-button">もう一度挑戦する</button>
+            <p id="challenge-count">挑戦回数: <span id="challenge-number">0</span> 回</p>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: '福祉用具専門相談員が、利用者の自己決定権を尊重しつつ、安全かつ効果的な福祉用具の利用を促進するために、特に留意すべき倫理的側面として最も適切なものはどれですか？',
+                options: [
+                    '利用者の希望を最優先し、安全性の確認をせずに要望通りの用具を提供する。',
+                    '専門的知見から最適な用具を一方的に決定し、利用者の意見は形式的に聴取するに留める。',
+                    '利用者に複数の選択肢を提示し、それぞれの利点・欠点を丁寧に説明した上で、最終的な選択を利用者に委ねる。',
+                    '利用者の介護度に応じて、常に最も高機能で高価な用具を推奨する。'
+                ],
+                correctAnswerIndex: 2
+            },
+            {
+                question: '介護保険制度における福祉用具貸与について、特定疾病により利用者の状態が変化した場合に、例外的に貸与が可能となる品目や条件の組み合わせとして最も適切なものはどれですか？',
+                options: [
+                    '入浴用リフト：要介護認定を受けていない軽度の認知症利用者',
+                    '排泄予測支援機器：要支援1・2の特定疾病（例：脳血管疾患）による排泄機能障害がある利用者',
+                    '特殊尿器（自動排泄処理装置）：身体障害者手帳を持つ若年性アルツハイマー型認知症利用者',
+                    '移動用リフト：末期がんの診断を受けたが、在宅医療を受けていない利用者'
+                ],
+                correctAnswerIndex: 1
+            },
+            {
+                question: '福祉用具専門相談員が、利用者宅でのアセスメント中に、利用者の家族からサービス提供範囲外の個人的な依頼（例：私物の修理）を受けた場合、専門職として取るべき最も適切な対応はどれですか？',
+                options: [
+                    '利用者の要望であるため、可能な範囲で依頼に応じて対応する。',
+                    'その場で明確に拒否せず、後日、事業所の上司に相談してから返答する。',
+                    '専門職としてのサービス提供範囲と、その依頼が範囲外であることを丁寧に説明し、丁重にお断りする。',
+                    '同様の依頼は他でもよくあることなので、暗黙の了解として対応を避ける。'
+                ],
+                correctAnswerIndex: 2
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let challengeCount = localStorage.getItem('challengeCount') ? parseInt(localStorage.getItem('challengeCount')) : 0;
+
+        const quizArea = document.getElementById('quiz-area');
+        const resultsArea = document.getElementById('results-area');
+        const questionNumberElem = document.getElementById('question-number');
+        const questionTextElem = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreTextElem = document.getElementById('score-text');
+        const retakeQuizBtn = document.getElementById('retake-quiz');
+        const challengeNumberElem = document.getElementById('challenge-number');
+
+        function loadQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const q = questions [currentQuestionIndex];
+                questionNumberElem.textContent = `第 ${currentQuestionIndex + 1} 問`;
+                questionTextElem.textContent = q.question;
+                optionsContainer.innerHTML = ''; // Clear previous options
+
+                q.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-button');
+                    button.textContent = option;
+                    button.onclick = () => selectAnswer(index);
+                    optionsContainer.appendChild(button);
+                });
+            } else {
+                showResults();
+            }
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (selectedIndex === questions [currentQuestionIndex].correctAnswerIndex) {
+                score++;
+            }
+            currentQuestionIndex++;
+            loadQuestion(); // Load next question or show results
+        }
+
+        function showResults() {
+            quizArea.style.display = 'none';
+            resultsArea.style.display = 'block';
+            scoreTextElem.textContent = `あなたのスコアは ${score} / ${questions.length} です！`;
+            challengeNumberElem.textContent = challengeCount;
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            quizArea.style.display = 'block';
+            resultsArea.style.display = 'none';
+            challengeCount++;
+            localStorage.setItem('challengeCount', challengeCount);
+            loadQuestion();
+            challengeNumberElem.textContent = challengeCount; // Update count immediately after reset
+        }
+
+        retakeQuizBtn.onclick = resetQuiz;
+
+        // Initial load
+        loadQuestion();
+        challengeNumberElem.textContent = challengeCount; // Display initial count
+    </script>
+</body>
+</html>
